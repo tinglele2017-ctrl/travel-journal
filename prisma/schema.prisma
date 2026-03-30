@@ -13,9 +13,11 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  name          String
+  username      String    @unique
   avatar        String?
   bio           String?
+  location      String?   // 常居地
+  countriesVisited Json?  // 去过的国家 JSON 数组
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -46,6 +48,7 @@ model TravelJournal {
   collectCount  Int       @default(0)
 
   createdAt     DateTime  @default(now())
+  publishedAt   DateTime?
   updatedAt     DateTime  @updatedAt
 
   // 关系
@@ -83,14 +86,18 @@ model JournalDay {
 model Destination {
   id            String    @id @default(cuid())
   name          String
-  level         String    @default("city") // continent | country | city | spot
+  nameEn        String?
+  level         String    @default("city") // continent | country | city
   country       String?
   region        String?
   description   String?
+  bestSeason    String?   // 最佳旅行时间
   latitude      Float?
   longitude     Float?
   coverImage    String?
+  journalCount  Int       @default(0)
   createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // 层级关系（支持三级：洲→国家→城市）
   parent        Destination?  @relation("DestinationHierarchy", fields: [parentId], references: [id])
@@ -154,6 +161,7 @@ model Tag {
   id            String    @id @default(cuid())
   name          String    @unique
   type          String    @default("theme") // destination | theme
+  journalCount  Int       @default(0)
   createdAt     DateTime  @default(now())
 
   // 关系
