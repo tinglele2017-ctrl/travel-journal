@@ -10,7 +10,7 @@ export default async function JournalDetailPage({
 }) {
   const { id } = await params;
   const caller = await createServerCaller();
-  const journal = await caller.journal.getById({ id });
+  const journal = await caller.journal.getById({ id }) as any;
 
   if (!journal) {
     return (
