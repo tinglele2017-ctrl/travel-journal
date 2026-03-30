@@ -13,11 +13,9 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
   name          String
   avatar        String?
   bio           String?
-  passwordHash  String
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -39,6 +37,14 @@ model TravelJournal {
   isPublic      Boolean   @default(true)
   startDate     DateTime?
   endDate       DateTime?
+
+  // 统计字段（冗余，用于快速展示）
+  totalDays     Int       @default(0)
+  totalCost     Float     @default(0)
+  likeCount     Int       @default(0)
+  commentCount  Int       @default(0)
+  collectCount  Int       @default(0)
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -77,6 +83,7 @@ model JournalDay {
 model Destination {
   id            String    @id @default(cuid())
   name          String
+  level         String    @default("city") // continent | country | city | spot
   country       String?
   region        String?
   description   String?
@@ -84,6 +91,11 @@ model Destination {
   longitude     Float?
   coverImage    String?
   createdAt     DateTime  @default(now())
+
+  // 层级关系（支持三级：洲→国家→城市）
+  parent        Destination?  @relation("DestinationHierarchy", fields: [parentId], references: [id])
+  parentId      String?
+  children      Destination[] @relation("DestinationHierarchy")
 
   // 关系
   journals      TravelJournal[]
@@ -121,8 +133,12 @@ model Collection {
 model Media {
   id            String    @id @default(cuid())
   url           String
+  thumbnailUrl  String?
   type          String    @default("image") // image | video
   caption       String?
+  width         Int?
+  height        Int?
+  size          Int?       // 文件大小（字节）
   sortOrder     Int       @default(0)
   createdAt     DateTime  @default(now())
 
@@ -131,11 +147,13 @@ model Media {
   journalId     String
   day           JournalDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
   dayId         String?
+  poi           JournalPOI?
 }
 
 model Tag {
   id            String    @id @default(cuid())
   name          String    @unique
+  type          String    @default("theme") // destination | theme
   createdAt     DateTime  @default(now())
 
   // 关系
@@ -169,6 +187,8 @@ model JournalPOI {
   journalId     String
   day           JournalDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
   dayId         String?
+  media         Media?    @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  mediaId       String?   @unique
 }
 
 model JournalExpense {
