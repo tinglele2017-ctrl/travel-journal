@@ -72,7 +72,7 @@ export default async function DestinationDetailPage({
               {destination.level === "continent" ? "国家" : "城市/地区"}
             </h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-              {destination.children.map((child) => (
+              {destination.children.map((child: { id: string; name: string; coverImage: string | null; journalCount: number }) => (
                 <Link
                   key={child.id}
                   href={`/destination/${child.id}`}
