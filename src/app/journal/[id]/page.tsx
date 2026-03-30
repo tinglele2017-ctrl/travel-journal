@@ -24,7 +24,7 @@ export default async function JournalDetailPage({
     );
   }
 
-  const expenseByCategory = journal.days.reduce((acc, day) => {
+  const expenseByCategory = journal.days.reduce((acc: Record<string, number>, day) => {
     day.expenses.forEach((e) => {
       acc[e.category] = (acc[e.category] || 0) + e.amount;
     });
