@@ -28,9 +28,12 @@ export function Navbar() {
         {/* 右侧操作 */}
         <div className="flex items-center gap-3">
           {/* 搜索按钮 */}
-          <button className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900">
+          <Link
+            href="/search"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          >
             🔍
-          </button>
+          </Link>
 
           {/* 写游记 */}
           <Link

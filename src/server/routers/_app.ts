@@ -1,10 +1,10 @@
 import { createTRPCRouter } from "../trpc";
-// import { journalRouter } from "./journal";
-// import { userRouter } from "./user";
+import { journalRouter } from "./journal";
+import { destinationRouter } from "./destination";
 
 export const appRouter = createTRPCRouter({
-  // journal: journalRouter,
-  // user: userRouter,
+  journal: journalRouter,
+  destination: destinationRouter,
 });
 
 export type AppRouter = typeof appRouter;
