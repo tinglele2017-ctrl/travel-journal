@@ -4,6 +4,19 @@ import { JournalCard } from "@/components/journal/journal-card";
 
 export const dynamic = "force-dynamic";
 
+interface DestinationDetail {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  level: string;
+  coverImage: string | null;
+  description: string | null;
+  bestSeason: string | null;
+  journalCount: number;
+  parent: { id: string; name: string } | null;
+  children: { id: string; name: string; coverImage: string | null; journalCount: number }[];
+}
+
 interface JournalItem {
   id: string;
   title: string;
@@ -35,7 +48,7 @@ export default async function DestinationDetailPage({
     );
   }
 
-  const { destination, journals } = result as { destination: any; journals: JournalItem[] };
+  const { destination, journals } = result as { destination: DestinationDetail; journals: JournalItem[] };
 
   // 层级导航：父级 → 当前
   const breadcrumbs = [];
