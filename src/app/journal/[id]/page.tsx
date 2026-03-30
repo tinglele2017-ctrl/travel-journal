@@ -1,82 +1,6 @@
-// 示例数据
-const JOURNAL = {
-  id: "j1",
-  title: "冰岛环岛自驾 14 天完整攻略",
-  coverImage: "https://images.unsplash.com/photo-1504893524553-b855bce32c67?w=1200&h=600&fit=crop",
-  summary: "从雷克雅未克出发，逆时针环岛，途经黄金圈、南岸、东部峡湾、北部阿克雷里、西部斯奈山半岛...",
-  author: { username: "小明", avatar: null, bio: "旅行是认识自己的方式" },
-  totalDays: 14,
-  totalCost: 32000,
-  likeCount: 128,
-  collectCount: 64,
-  commentCount: 23,
-  startDate: "2026-02-01",
-  publishedAt: "2026-02-20",
-  days: [
-    {
-      dayNumber: 1,
-      title: "抵达雷克雅未克",
-      date: "2026-02-01",
-      content: `经过 12 小时的飞行，终于在凌晨抵达了凯夫拉维克机场。取到车的那一刻，兴奋感瞬间盖过了疲惫。
+import { createServerCaller } from "@/lib/server-api";
 
-我们租了一辆四驱 SUV，考虑到冰岛冬天的路况，这是必须的。从机场到雷克雅未克大约 45 分钟车程，沿途已经是让人心跳加速的火山岩地貌。
-
-入住后在市中心逛了逛，吃了传说中的冰岛热狗（Bæjarins Beztu Pylsur），确实名不虚传！`,
-      pois: [
-        { name: "凯夫拉维克机场", address: "Reykjavik, Iceland" },
-        { name: "Bæjarins Beztu Pylsur", address: "Tryggvagata 1, Reykjavik" },
-      ],
-      expenses: [
-        { category: "交通", amount: 800, itemName: "租车 14 天" },
-        { category: "餐饮", amount: 200, itemName: "冰岛热狗 + 晚餐" },
-      ],
-    },
-    {
-      dayNumber: 2,
-      title: "黄金圈经典路线",
-      date: "2026-02-02",
-      content: `今天是经典的黄金圈一日游：Þingvellir 国家公园 → Geysir 间歇泉 → Gullfoss 黄金瀑布。
-
-Þingvellir 是两个大陆板块的交界处，走在裂缝之间，脚下踩着的是地球的"伤疤"。这里的地质意义让任何照片都无法完全表达。
-
-Geysir 的 Strokkur 间歇泉每隔 5-10 分钟喷发一次，水柱高达 20 米，第一次看到时忍不住惊呼。
-
-Gullfoss 是今天的压轴——三层瀑布在峡谷中奔腾而下，冬日的冰挂让它更加壮观。`,
-      pois: [
-        { name: "Þingvellir 国家公园", address: "Þingvellir, Iceland" },
-        { name: "Geysir 间歇泉", address: "Geysir, Iceland" },
-        { name: "Gullfoss 黄金瀑布", address: "Gullfoss, Iceland" },
-      ],
-      expenses: [
-        { category: "交通", amount: 150, itemName: "油费" },
-        { category: "门票", amount: 0, itemName: "自然景点免费" },
-        { category: "餐饮", amount: 250, itemName: "午餐 + 晚餐" },
-      ],
-    },
-    {
-      dayNumber: 3,
-      title: "南岸瀑布与黑沙滩",
-      date: "2026-02-03",
-      content: `今天的行程是冰岛南岸：Seljalandsfoss 瀑布 → Skógafoss 瀑布 → Reynisfjara 黑沙滩。
-
-Seljalandsfoss 是可以走到瀑布后面去的！虽然冬天地滑，但穿着钉鞋还是可以的。从瀑布后面看出去的景色太震撼了。
-
-Skógafoss 是权游的取景地之一，走到瀑布下方，水雾扑面而来，整个人都湿透了但超开心。
-
-Reynisfjara 黑沙滩是今天的惊喜。玄武岩石柱、漆黑的沙粒、还有大西洋的巨浪——这里有一种末日般的壮美。但请注意安全！疯狗浪真的会把人卷走。`,
-      pois: [
-        { name: "Seljalandsfoss 瀑布", address: "Seljalandsfoss, Iceland" },
-        { name: "Skógafoss 瀑布", address: "Skógafoss, Iceland" },
-        { name: "Reynisfjara 黑沙滩", address: "Vik, Iceland" },
-      ],
-      expenses: [
-        { category: "交通", amount: 180, itemName: "油费" },
-        { category: "餐饮", amount: 300, itemName: "午餐 + 晚餐" },
-        { category: "住宿", amount: 1200, itemName: "Vik 镇民宿" },
-      ],
-    },
-  ],
-};
+export const dynamic = "force-dynamic";
 
 export default async function JournalDetailPage({
   params,
@@ -84,8 +8,33 @@ export default async function JournalDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  void id; // will be used for fetching from DB
-  const journal = JOURNAL;
+  const caller = await createServerCaller();
+  const journal = await caller.journal.getById({ id });
+
+  if (!journal) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-6xl">📭</div>
+          <h1 className="text-2xl font-bold text-gray-900">游记不存在</h1>
+          <p className="mt-2 text-gray-500">这篇游记可能已被删除或尚未发布</p>
+        </div>
+      </div>
+    );
+  }
+
+  const totalExpense = journal.days.reduce(
+    (sum, day) => sum + day.expenses.reduce((s, e) => s + e.amount, 0),
+    0
+  );
+
+  // 按分类汇总费用
+  const expenseByCategory = journal.days.reduce((acc, day) => {
+    day.expenses.forEach((e) => {
+      acc[e.category] = (acc[e.category] || 0) + e.amount;
+    });
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <div className="flex">
@@ -97,11 +46,11 @@ export default async function JournalDetailPage({
         <nav className="space-y-1">
           {journal.days.map((day) => (
             <a
-              key={day.dayNumber}
+              key={day.id}
               href={`#day-${day.dayNumber}`}
               className="block rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
-              Day {day.dayNumber} · {day.title}
+              Day {day.dayNumber} · {day.title || "未命名"}
             </a>
           ))}
         </nav>
@@ -116,55 +65,72 @@ export default async function JournalDetailPage({
               <dt className="text-gray-500">天数</dt>
               <dd className="font-medium text-gray-900">{journal.totalDays} 天</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-gray-500">出发</dt>
-              <dd className="font-medium text-gray-900">{journal.startDate}</dd>
-            </div>
+            {journal.startDate && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">出发</dt>
+                <dd className="font-medium text-gray-900">
+                  {new Date(journal.startDate).toLocaleDateString("zh-CN")}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-gray-500">花费</dt>
-              <dd className="font-medium text-gray-900">¥{journal.totalCost.toLocaleString()}</dd>
+              <dd className="font-medium text-gray-900">
+                ¥{totalExpense.toLocaleString()}
+              </dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">POI</dt>
+              <dd className="font-medium text-gray-900">
+                {journal.days.reduce((s, d) => s + d.pois.length, 0)} 个
+              </dd>
             </div>
           </dl>
         </div>
 
         {/* 费用统计 */}
-        <div className="mt-6 rounded-xl bg-gray-50 p-4">
-          <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
-            费用统计
-          </h4>
-          <div className="space-y-2">
-            {[
-              { label: "交通", value: 1130, color: "bg-blue-500" },
-              { label: "住宿", value: 1200, color: "bg-green-500" },
-              { label: "餐饮", value: 750, color: "bg-orange-500" },
-              { label: "门票", value: 0, color: "bg-purple-500" },
-            ].map((item) => (
-              <div key={item.label}>
-                <div className="mb-1 flex justify-between text-xs text-gray-500">
-                  <span>{item.label}</span>
-                  <span>¥{item.value}</span>
+        {Object.keys(expenseByCategory).length > 0 && (
+          <div className="mt-6 rounded-xl bg-gray-50 p-4">
+            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-gray-400">
+              费用统计
+            </h4>
+            <div className="space-y-2">
+              {Object.entries(expenseByCategory).map(([category, amount]) => (
+                <div key={category}>
+                  <div className="mb-1 flex justify-between text-xs text-gray-500">
+                    <span>{category}</span>
+                    <span>¥{amount.toLocaleString()}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${Math.min((amount / Math.max(totalExpense, 1)) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className={`h-full rounded-full ${item.color}`}
-                    style={{ width: `${Math.min((item.value / 3200) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </aside>
 
       {/* ========== 主内容区 ========== */}
       <main className="min-w-0 flex-1">
         {/* 封面图 */}
-        <div className="relative h-[400px] overflow-hidden">
-          <img
-            src={journal.coverImage}
-            alt={journal.title}
-            className="h-full w-full object-cover"
-          />
+        <div className="relative h-[400px] overflow-hidden bg-gray-100">
+          {journal.coverImage ? (
+            <img
+              src={journal.coverImage}
+              alt={journal.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
+              <span className="text-6xl">🌍</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-8">
             <div className="mx-auto max-w-3xl">
@@ -187,7 +153,11 @@ export default async function JournalDetailPage({
                 )}
                 <div>
                   <p className="font-medium text-white">{journal.author.username}</p>
-                  <p className="text-sm text-white/70">{journal.publishedAt}</p>
+                  <p className="text-sm text-white/70">
+                    {journal.publishedAt
+                      ? new Date(journal.publishedAt).toLocaleDateString("zh-CN")
+                      : "草稿"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -213,15 +183,17 @@ export default async function JournalDetailPage({
         </div>
 
         {/* 摘要 */}
-        <div className="mx-auto max-w-3xl px-4 py-8">
-          <p className="text-lg leading-relaxed text-gray-600">{journal.summary}</p>
-        </div>
+        {journal.summary && (
+          <div className="mx-auto max-w-3xl px-4 py-8">
+            <p className="text-lg leading-relaxed text-gray-600">{journal.summary}</p>
+          </div>
+        )}
 
         {/* Day 时间线 */}
         <div className="mx-auto max-w-3xl px-4 pb-16">
           {journal.days.map((day, index) => (
             <article
-              key={day.dayNumber}
+              key={day.id}
               id={`day-${day.dayNumber}`}
               className="mb-12 scroll-mt-32"
             >
@@ -232,21 +204,42 @@ export default async function JournalDetailPage({
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    📍 Day {day.dayNumber} · {day.title}
+                    📍 Day {day.dayNumber}
+                    {day.title && ` · ${day.title}`}
                   </h2>
-                  <p className="text-sm text-gray-500">{day.date}</p>
+                  {day.date && (
+                    <p className="text-sm text-gray-500">
+                      {new Date(day.date).toLocaleDateString("zh-CN")}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* 正文 */}
               <div className="mb-6 ml-5 border-l-2 border-gray-100 pl-8">
-                <div className="prose prose-gray max-w-none">
-                  {day.content.split("\n\n").map((paragraph, i) => (
-                    <p key={i} className="mb-4 leading-relaxed text-gray-700">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
+                {day.content && (
+                  <div className="prose prose-gray max-w-none">
+                    {day.content.split("\n").filter(Boolean).map((paragraph, i) => (
+                      <p key={i} className="mb-4 leading-relaxed text-gray-700">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* 媒体 */}
+                {day.medias.length > 0 && (
+                  <div className="mt-6 grid grid-cols-2 gap-2">
+                    {day.medias.map((media) => (
+                      <img
+                        key={media.id}
+                        src={media.thumbnailUrl || media.url}
+                        alt={media.caption || ""}
+                        className="rounded-lg"
+                      />
+                    ))}
+                  </div>
+                )}
 
                 {/* POI 标记 */}
                 {day.pois.length > 0 && (
@@ -254,13 +247,15 @@ export default async function JournalDetailPage({
                     <h4 className="text-sm font-semibold text-gray-900">📍 POI 标记</h4>
                     {day.pois.map((poi) => (
                       <div
-                        key={poi.name}
+                        key={poi.id}
                         className="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-3"
                       >
                         <span className="text-lg">📍</span>
                         <div>
                           <p className="text-sm font-medium text-gray-900">{poi.name}</p>
-                          <p className="text-xs text-gray-500">{poi.address}</p>
+                          {poi.address && (
+                            <p className="text-xs text-gray-500">{poi.address}</p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -281,10 +276,12 @@ export default async function JournalDetailPage({
                           </tr>
                         </thead>
                         <tbody className="divide-y">
-                          {day.expenses.map((expense, i) => (
-                            <tr key={i}>
+                          {day.expenses.map((expense) => (
+                            <tr key={expense.id}>
                               <td className="px-4 py-2">{expense.category}</td>
-                              <td className="px-4 py-2 text-gray-600">{expense.itemName}</td>
+                              <td className="px-4 py-2 text-gray-600">
+                                {expense.description || "-"}
+                              </td>
                               <td className="px-4 py-2 text-right font-medium">
                                 ¥{expense.amount}
                               </td>
@@ -293,7 +290,9 @@ export default async function JournalDetailPage({
                         </tbody>
                         <tfoot className="bg-gray-50 font-medium">
                           <tr>
-                            <td colSpan={2} className="px-4 py-2">小计</td>
+                            <td colSpan={2} className="px-4 py-2">
+                              小计
+                            </td>
                             <td className="px-4 py-2 text-right">
                               ¥{day.expenses.reduce((sum, e) => sum + e.amount, 0)}
                             </td>
