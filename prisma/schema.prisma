@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== 核心实体 ====================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  avatar        String?
+  bio           String?
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关系
+  journals      TravelJournal[]
+  comments      Comment[]
+  collections   Collection[]
+  likes         Like[]
+}
+
+model TravelJournal {
+  id            String    @id @default(cuid())
+  title         String
+  coverImage    String?
+  summary       String?
+  content       String?   @db.Text
+  status        String    @default("draft") // draft | published | archived
+  viewCount     Int       @default(0)
+  isPublic      Boolean   @default(true)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关系
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      String
+  days          JournalDay[]
+  comments      Comment[]
+  collections   Collection[]
+  medias        Media[]
+  tags          JournalTag[]
+  pois          JournalPOI[]
+  expenses      JournalExpense[]
+  likes         Like[]
+  destination   Destination? @relation(fields: [destinationId], references: [id])
+  destinationId String?
+}
+
+model JournalDay {
+  id            String    @id @default(cuid())
+  dayNumber     Int
+  title         String?
+  content       String?   @db.Text
+  date          DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关系
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  pois          JournalPOI[]
+  expenses      JournalExpense[]
+  medias        Media[]
+}
+
+model Destination {
+  id            String    @id @default(cuid())
+  name          String
+  country       String?
+  region        String?
+  description   String?
+  latitude      Float?
+  longitude     Float?
+  coverImage    String?
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  journals      TravelJournal[]
+}
+
+model Comment {
+  id            String    @id @default(cuid())
+  content       String    @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关系
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      String
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  parent        Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  parentId      String?
+  replies       Comment[] @relation("CommentReplies")
+}
+
+model Collection {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+
+  @@unique([userId, journalId])
+}
+
+model Media {
+  id            String    @id @default(cuid())
+  url           String
+  type          String    @default("image") // image | video
+  caption       String?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  day           JournalDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  dayId         String?
+}
+
+model Tag {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  journals      JournalTag[]
+}
+
+model JournalTag {
+  id            String    @id @default(cuid())
+
+  // 关系
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  tag           Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId         String
+
+  @@unique([journalId, tagId])
+}
+
+model JournalPOI {
+  id            String    @id @default(cuid())
+  name          String
+  address       String?
+  latitude      Float?
+  longitude     Float?
+  description   String?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  day           JournalDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  dayId         String?
+}
+
+model JournalExpense {
+  id            String    @id @default(cuid())
+  category      String    // 交通 | 住宿 | 餐饮 | 门票 | 购物 | 其他
+  amount        Float
+  currency      String    @default("CNY")
+  description   String?
+  date          DateTime?
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+  day           JournalDay? @relation(fields: [dayId], references: [id], onDelete: SetNull)
+  dayId         String?
+}
+
+model Like {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+
+  // 关系
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  journal       TravelJournal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  journalId     String
+
+  @@unique([userId, journalId])
+}
