@@ -3,9 +3,16 @@ import { DestinationCard } from "@/components/journal/destination-card";
 
 export const dynamic = "force-dynamic";
 
+interface DestItem {
+  id: string;
+  name: string;
+  coverImage: string | null;
+  journalCount: number;
+}
+
 export default async function DestinationListPage() {
   const caller = await createServerCaller();
-  const destinations = await caller.destination.list({ level: "country" });
+  const destinations = (await caller.destination.list({ level: "country" })) as DestItem[];
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
